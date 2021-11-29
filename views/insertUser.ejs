@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrate</title>
+</head>
+<body>
+  <h1><%=title%></h1>
+  <form action="/insertUser" method="post">
+    <input type="text" name="nombre" placeholder="nombre">
+    <input type="email" name="email" placeholder="correo electronico">
+    <input type="password" name="contraseña" placeholder="contraseña">
+    <input type="password" name="Confirmcontraseña" placeholder="confirmar contraseña">
+    <input type="submit" value="Registrar">
+  </form>
+  <a href="/">Volver al inicio</a>
+</body>
+</html>

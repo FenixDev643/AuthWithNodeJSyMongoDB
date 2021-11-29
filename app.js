@@ -4,20 +4,42 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var indexRouter = require('./client/public/index');
-
 var app = express();
 
-// view engine setup
-app.set('view engine', 'jade');
+var indexRouter = require('./routes/index');
 
+var insertRouter = require('./routes/insertUser');
+var checkRouter = require('./routes/checkUser');
+var messageRouter = require('./routes/message');
+var homeRouter = require('./routes/Home');
+
+var session = require('cookie-session');
+var passport = require('passport');
+var API_DB = require('./database/DB');
+var DB = new API_DB();
+passport.use(DB.Strategy);
+console.log(DB.Strategy);
+passport.serializeUser(DB.serializeUser);
+passport.deserializeUser(DB.deserializeUser);
+
+// view engine setup
+app.set('views', path.resolve('views'))
+
+app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('key'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session( { secret : 'key'  } ));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/', indexRouter);
+app.use('/insertUser', insertRouter);
+app.use('/checkUser', checkRouter);
+app.use('/message', messageRouter);
+app.use('/home', homeRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

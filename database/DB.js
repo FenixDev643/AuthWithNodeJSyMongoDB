@@ -1,12 +1,15 @@
-var mongoose = require('mongoose')
+var mongoose = require('mongoose');
+var bcrypt = require('bcrypt');
+var StrategyLogin = require('passport-local').Strategy;
+
 mongoose.connect('mongodb://localhost/AuthMongoDB');
 console.log("connected to data base");
 // usa Schema para crear colecciones
 var Schema = mongoose.Schema;
 var documentDescription = {
 nombre: String,
-apellidos: String,
-telefono: String
+email: String,
+contraseña: String
 }
 
 // se crea la nueva coleccion
@@ -27,8 +30,8 @@ DB.prototype.insertUser = function(NuevaData,callBack){
     // el nombre apellido etc...
     var NewUsuario = new UserData();
     NewUsuario.nombre = NuevaData.nombre;
-    NewUsuario.apellidos = NuevaData.apellidos;
-    NewUsuario.telefono = NuevaData.telefono;
+    NewUsuario.email = NuevaData.email;
+    NewUsuario.contraseña = NuevaData.contraseña;
 
     // lo guarda y detecta si hay un error
     NewUsuario.save(function(err){
@@ -36,15 +39,26 @@ DB.prototype.insertUser = function(NuevaData,callBack){
             return callBack("error al insertar usuario " + err)
         }
         else{
-            return callBack(null,"usuario insertado correctamente")
+            return callBack(null,"usuario registrado correctamente")
         }
         })
+}
+
+DB.prototype.serializeUser = function(user, callBack){
+  callBack(null,user.nombre);
+}
+
+DB.prototype.deserializeUser = function(username, callBack){
+
+  UserData.find({nombre: username},function(err,docs){
+       callBack(err,docs[0]); 
+    })
 }
 
 DB.prototype.getUsers = function(callBack){
     UserData.find({},function(err,docs){
         if(err){
-            callBack("error al conseguir usuarios " + err,null);
+            callBack("error al conseguir usuarios: " + err,null);
         }
         else{
             callBack(null,docs);
@@ -52,8 +66,27 @@ DB.prototype.getUsers = function(callBack){
     })
 }
 
-var something = function(){
-    console.log("HELLO WORLD");
+DB.prototype.Strategy = new StrategyLogin(
+function checkUserFunction(username, password,callback){
+
+  UserData.find({username, password},function(err,docs){
+        if(err){
+            return callback(err,false);
+        }
+          if(!docs[0]){
+            return callback(null,false, { message: 'no se encontro un usuario' });
+          }
+            bcrypt.compare(password,docs[0].contraseña).then(function(samePassword){
+              if(!samePassword){
+                return callback(null, false, 'contraseña incorrecta');
+              }
+              var completedUser = docs[0];
+              completedUser.contraseña = password;
+              return callback(null,completedUser);
+            })
+    })
+
 }
+);
 
 module.exports = DB;
